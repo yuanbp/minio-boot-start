@@ -17,7 +17,6 @@ import org.chieftain.minio.vo.MinioItem;
 import org.chieftain.minio.vo.MinioObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -45,12 +44,12 @@ public class MinioEndpoint {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MinioEndpoint.class);
 
-    public MinioEndpoint() {
+    public MinioEndpoint(MinioOptimizTemplate minioOptimizTemplate) {
         LOGGER.info("MinioEndpoint init");
+        this.minioOptimizTemplate = minioOptimizTemplate;
     }
 
-    @Autowired
-    private MinioOptimizTemplate template;
+    private final MinioOptimizTemplate minioOptimizTemplate;
     private static final Integer ONE_DAY = 60 * 60 * 24;
 
     /**
@@ -59,8 +58,8 @@ public class MinioEndpoint {
      */
     @PostMapping("/bucket/{bucketName}")
     public Bucket createBucker(@PathVariable String bucketName) throws Exception {
-        template.createBucket(bucketName);
-        return template.getBucket(bucketName).get();
+        minioOptimizTemplate.createBucket(bucketName);
+        return minioOptimizTemplate.getBucket(bucketName).get();
     }
 
     /**
@@ -81,7 +80,7 @@ public class MinioEndpoint {
      */
     @GetMapping("/bucket")
     public List<Bucket> getBuckets() throws Exception {
-            return template.getAllBuckets();
+            return minioOptimizTemplate.getAllBuckets();
     }
 
     /**
@@ -103,7 +102,7 @@ public class MinioEndpoint {
      */
     @GetMapping("/bucket/{bucketName}")
     public Bucket getBucket(@PathVariable String bucketName) throws Exception {
-        return template.getBucket(bucketName).orElseThrow(() -> new IllegalArgumentException("Bucket Name not found!"));
+        return minioOptimizTemplate.getBucket(bucketName).orElseThrow(() -> new IllegalArgumentException("Bucket Name not found!"));
     }
 
     /**
@@ -125,7 +124,7 @@ public class MinioEndpoint {
     @DeleteMapping("/bucket/{bucketName}")
     @ResponseStatus(HttpStatus.ACCEPTED)
     public void deleteBucket(@PathVariable String bucketName) throws Exception {
-            template.removeBucket(bucketName);
+            minioOptimizTemplate.removeBucket(bucketName);
     }
 
     /**
@@ -135,8 +134,8 @@ public class MinioEndpoint {
     @PostMapping("/object/{bucketName}")
     public MinioObject putObject(@RequestBody MultipartFile object, @PathVariable String bucketName) throws Exception {
         String name = object.getOriginalFilename();
-        template.putObject(bucketName, name, object.getInputStream(), object.getSize(), object.getContentType());
-        return new MinioObject(template.getObjectInfo(bucketName, name));
+        minioOptimizTemplate.putObject(bucketName, name, object.getInputStream(), object.getSize(), object.getContentType());
+        return new MinioObject(minioOptimizTemplate.getObjectInfo(bucketName, name));
 
     }
 
@@ -163,8 +162,8 @@ public class MinioEndpoint {
      */
     @PostMapping("/object/{bucketName}/{objectName}")
     public MinioObject putObject(@RequestBody MultipartFile object, @PathVariable String bucketName, @PathVariable String objectName) throws Exception {
-        template.putObject(bucketName, objectName, object.getInputStream(), object.getSize(), object.getContentType());
-        return new MinioObject(template.getObjectInfo(bucketName, objectName));
+        minioOptimizTemplate.putObject(bucketName, objectName, object.getInputStream(), object.getSize(), object.getContentType());
+        return new MinioObject(minioOptimizTemplate.getObjectInfo(bucketName, objectName));
     }
 
 
@@ -178,7 +177,7 @@ public class MinioEndpoint {
      */
     @GetMapping("/object/{bucketName}/{objectName}")
     public  List<MinioItem>  filterObject(@PathVariable String bucketName, @PathVariable String objectName) throws Exception {
-        return template.getAllObjectsByPrefix(bucketName, objectName, true);
+        return minioOptimizTemplate.getAllObjectsByPrefix(bucketName, objectName, true);
     }
 
     /**
@@ -207,7 +206,7 @@ public class MinioEndpoint {
         // Put Object info
         responseBody.put("bucket" , bucketName);
         responseBody.put("object" , objectName);
-        responseBody.put("url" , template.getObjectURL(bucketName, objectName, expires));
+        responseBody.put("url" , minioOptimizTemplate.getObjectURL(bucketName, objectName, expires));
         responseBody.put("expires" ,  expires);
         return  responseBody;
     }
@@ -233,6 +232,6 @@ public class MinioEndpoint {
     @DeleteMapping("/object/{bucketName}/{objectName}/")
     @ResponseStatus(HttpStatus.ACCEPTED)
     public void deleteObject(@PathVariable String bucketName, @PathVariable String objectName) throws Exception {
-        template.removeObject(bucketName, objectName);
+        minioOptimizTemplate.removeObject(bucketName, objectName);
     }
 }

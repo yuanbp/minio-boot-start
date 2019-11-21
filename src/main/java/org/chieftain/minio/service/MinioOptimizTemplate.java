@@ -110,6 +110,17 @@ public class MinioOptimizTemplate {
         }
     }
 
+    public String getObjectURL(String bucketName, String objectName) throws Exception {
+        MinioClient client = pool.getMinioClientPool().borrowObject();
+        try {
+            return client.presignedGetObject(bucketName, objectName);
+        } finally {
+            if (null != client) {
+                pool.getMinioClientPool().returnObject(client);
+            }
+        }
+    }
+
     public void putFile(String bucketName, String fileName, InputStream stream) throws Exception {
         MinioClient client = pool.getMinioClientPool().borrowObject();
         try {

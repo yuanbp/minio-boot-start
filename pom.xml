@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.chieftain</groupId>
     <artifactId>minio-boot-starter</artifactId>
-    <version>1.4</version>
+    <version>1.4.2</version>
     <name>minio-boot-starter</name>
     <description>minio springboot starter</description>
 
@@ -72,14 +72,14 @@
 
     <distributionManagement>
         <repository>
-            <id>metinform-release</id>
-            <name>metinform-release</name>
-            <url>http://nexus.dev.metinform.cn/repository/metinform-release/</url>
+            <id>wisdom-trade-releases</id>
+            <name>wisdom-trade-releases</name>
+            <url>http://zhimao1.uttcare.com:8850/repository/wisdom-trade-releases/</url>
         </repository>
         <snapshotRepository>
-            <id>metinform-snapshot</id>
-            <name>metinform-snapshot</name>
-            <url>http://nexus.dev.metinform.cn/repository/metinform-snapshot/</url>
+            <id>wisdom-trade-snapshots</id>
+            <name>wisdom-trade-snapshots</name>
+            <url>http://zhimao1.uttcare.com:8850/repository/wisdom-trade-snapshots/</url>
         </snapshotRepository>
     </distributionManagement>
 

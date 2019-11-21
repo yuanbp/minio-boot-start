@@ -37,7 +37,7 @@ public class MinioAutoConfiguration {
 
     @Bean
     @DependsOn("minioClientPool")
-    MinioOptimizTemplate minioRocketTemplate (@Qualifier("minioClientPool") MinioClientPool minioClientPool) {
+    MinioOptimizTemplate minioOptimizTemplate (@Qualifier("minioClientPool") MinioClientPool minioClientPool) {
         return new MinioOptimizTemplate(minioClientPool);
     }
 }
