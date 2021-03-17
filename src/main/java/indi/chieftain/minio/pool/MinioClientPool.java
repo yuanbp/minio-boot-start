@@ -1,14 +1,13 @@
-package org.chieftain.minio.pool;
+package indi.chieftain.minio.pool;
 
 import io.minio.MinioClient;
 import lombok.Data;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
-import org.chieftain.minio.MinioProperties;
+import indi.chieftain.minio.MinioProperties;
 
 /**
  * @author chieftain
- * @date 2019-11-01 16:25
  */
 @Data
 public class MinioClientPool {

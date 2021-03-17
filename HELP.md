@@ -12,7 +12,7 @@ For further reference, please consider the following sections:
 <dependency>
     <groupId>org.chieftain</groupId>
     <artifactId>minio-boot-starter</artifactId>
-    <version>1.3</version>
+    <version>${最新版本}</version>
 </dependency>
 ```
 
@@ -23,6 +23,7 @@ minio:
   access-key: cea8bb09ec17123c35fed7a62192211e
   secret-key: e2c452158f84afd2ec1fcf62592b66a2
   bucket-name: trading-platform
+  system-platform: unix
   pool:
     max-total: 30
     max-idle: 10
@@ -37,4 +38,14 @@ minio:
 ### 配置属性说明
 - url: minio 的服务地址
 - access-key: 
-- secret-key:
+- secret-key: 
+- bucket-name: 存储文件夹名称
+- system-platform: minio 服务器平台 unix 或 windows
+
+### 使用
+```java
+import indi.chieftain.minio.toolkit.MinioHelper;
+
+@Autowrite
+private MinioHelper minioHelper;
+```

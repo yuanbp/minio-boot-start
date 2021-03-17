@@ -1,13 +1,23 @@
-package org.chieftain.minio.service;
+package indi.chieftain.minio.component;
 
+import indi.chieftain.minio.pool.MinioClientPool;
+import indi.chieftain.minio.vo.MinioItem;
+import io.minio.BucketExistsArgs;
+import io.minio.DownloadObjectArgs;
+import io.minio.GetObjectArgs;
+import io.minio.GetPresignedObjectUrlArgs;
+import io.minio.ListObjectsArgs;
+import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
-import io.minio.ObjectStat;
+import io.minio.PutObjectArgs;
+import io.minio.RemoveBucketArgs;
+import io.minio.RemoveObjectArgs;
 import io.minio.Result;
+import io.minio.StatObjectArgs;
+import io.minio.StatObjectResponse;
 import io.minio.messages.Bucket;
 import io.minio.messages.Item;
 import lombok.SneakyThrows;
-import org.chieftain.minio.pool.MinioClientPool;
-import org.chieftain.minio.vo.MinioItem;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -16,13 +26,12 @@ import java.util.Optional;
 
 /**
  * @author chieftain
- * @date 2019-11-01 16:50
  */
-public class MinioOptimizTemplate {
+public class MinioTemplate {
 
-    private MinioClientPool pool;
+    private final MinioClientPool pool;
 
-    public MinioOptimizTemplate(MinioClientPool pool) {
+    public MinioTemplate(MinioClientPool pool) {
         this.pool = pool;
     }
 
@@ -32,8 +41,8 @@ public class MinioOptimizTemplate {
     public void createBucket(String bucketName) throws Exception {
         MinioClient client = pool.getMinioClientPool().borrowObject();
         try {
-            if(!client.bucketExists(bucketName)){
-                client.makeBucket(bucketName);
+            if (!client.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build())) {
+                client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
             }
         } finally {
             if (null != client) {
@@ -56,7 +65,7 @@ public class MinioOptimizTemplate {
     public Optional<Bucket> getBucket(String bucketName) throws Exception {
         MinioClient client = pool.getMinioClientPool().borrowObject();
         try {
-            return client.listBuckets().stream().filter( b -> b.name().equals(bucketName)).findFirst();
+            return client.listBuckets().stream().filter(b -> b.name().equals(bucketName)).findFirst();
         } finally {
             if (null != client) {
                 pool.getMinioClientPool().returnObject(client);
@@ -67,7 +76,7 @@ public class MinioOptimizTemplate {
     public void removeBucket(String bucketName) throws Exception {
         MinioClient client = pool.getMinioClientPool().borrowObject();
         try {
-            client.removeBucket(bucketName);
+            client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
         } finally {
             if (null != client) {
                 pool.getMinioClientPool().returnObject(client);
@@ -79,11 +88,11 @@ public class MinioOptimizTemplate {
         MinioClient client = pool.getMinioClientPool().borrowObject();
         try {
             List<MinioItem> objectList = new ArrayList<MinioItem>();
-            Iterable<Result<Item>> objectsIterator = client.listObjects(bucketName, prefix, recursive);
+            Iterable<Result<Item>> objectsIterator = client.listObjects(ListObjectsArgs.builder().bucket(bucketName).prefix(prefix).recursive(recursive).build());
             objectsIterator.forEach(i -> {
                 try {
                     objectList.add(new MinioItem(i.get()));
-                } catch ( Exception e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             });
@@ -102,7 +111,7 @@ public class MinioOptimizTemplate {
     public String getObjectURL(String bucketName, String objectName, Integer expires) throws Exception {
         MinioClient client = pool.getMinioClientPool().borrowObject();
         try {
-            return client.presignedGetObject(bucketName, objectName, expires);
+            return client.getPresignedObjectUrl(GetPresignedObjectUrlArgs.builder().bucket(bucketName).object(objectName).expiry(expires).build());
         } finally {
             if (null != client) {
                 pool.getMinioClientPool().returnObject(client);
@@ -113,7 +122,7 @@ public class MinioOptimizTemplate {
     public String getObjectURL(String bucketName, String objectName) throws Exception {
         MinioClient client = pool.getMinioClientPool().borrowObject();
         try {
-            return client.presignedGetObject(bucketName, objectName);
+            return client.getPresignedObjectUrl(GetPresignedObjectUrlArgs.builder().bucket(bucketName).object(objectName).build());
         } finally {
             if (null != client) {
                 pool.getMinioClientPool().returnObject(client);
@@ -124,7 +133,7 @@ public class MinioOptimizTemplate {
     public void putFile(String bucketName, String fileName, InputStream stream) throws Exception {
         MinioClient client = pool.getMinioClientPool().borrowObject();
         try {
-            client.putObject(bucketName, fileName, stream, (long) stream.available(), null, null, "application/octet-stream");
+            client.putObject(PutObjectArgs.builder().bucket(bucketName).object(fileName).stream(stream, stream.available(), -1).contentType("application/octet-stream").build());
         } finally {
             if (null != client) {
                 pool.getMinioClientPool().returnObject(client);
@@ -135,7 +144,7 @@ public class MinioOptimizTemplate {
     public void putFile(String bucketName, String fileName, InputStream stream, String contentType) throws Exception {
         MinioClient client = pool.getMinioClientPool().borrowObject();
         try {
-            client.putObject(bucketName, fileName, stream, (long) stream.available(), null, null, contentType);
+            client.putObject(PutObjectArgs.builder().bucket(bucketName).object(fileName).stream(stream, stream.available(), -1).contentType(contentType).build());
         } finally {
             if (null != client) {
                 pool.getMinioClientPool().returnObject(client);
@@ -146,7 +155,7 @@ public class MinioOptimizTemplate {
     public void putObject(String bucketName, String objectName, InputStream stream, long size, String contentType) throws Exception {
         MinioClient client = pool.getMinioClientPool().borrowObject();
         try {
-            client.putObject(bucketName, objectName, stream, size, null, null, contentType);
+            client.putObject(PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(stream, size, -1).contentType(contentType).build());
         } finally {
             if (null != client) {
                 pool.getMinioClientPool().returnObject(client);
@@ -165,7 +174,7 @@ public class MinioOptimizTemplate {
     public InputStream getObject(String bucketName, String objectName) {
         MinioClient client = pool.getMinioClientPool().borrowObject();
         try {
-            return client.getObject(bucketName, objectName);
+            return client.getObject(GetObjectArgs.builder().bucket(bucketName).object(objectName).build());
         } finally {
             if (null != client) {
                 pool.getMinioClientPool().returnObject(client);
@@ -173,10 +182,10 @@ public class MinioOptimizTemplate {
         }
     }
 
-    public ObjectStat getObjectInfo(String bucketName, String objectName) throws Exception {
+    public StatObjectResponse getObjectInfo(String bucketName, String objectName) throws Exception {
         MinioClient client = pool.getMinioClientPool().borrowObject();
         try {
-            return client.statObject(bucketName, objectName);
+            return client.statObject(StatObjectArgs.builder().bucket(bucketName).object(objectName).build());
         } finally {
             if (null != client) {
                 pool.getMinioClientPool().returnObject(client);
@@ -184,10 +193,21 @@ public class MinioOptimizTemplate {
         }
     }
 
-    public void removeObject(String bucketName, String objectName ) throws Exception {
+    public void removeObject(String bucketName, String objectName) throws Exception {
         MinioClient client = pool.getMinioClientPool().borrowObject();
         try {
-            client.removeObject(bucketName, objectName);
+            client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
+        } finally {
+            if (null != client) {
+                pool.getMinioClientPool().returnObject(client);
+            }
+        }
+    }
+
+    public void downloadObject(String bucketName, String objectName, String fileName) throws Exception {
+        MinioClient client = pool.getMinioClientPool().borrowObject();
+        try {
+            client.downloadObject(DownloadObjectArgs.builder().bucket(bucketName).object(objectName).filename(fileName).build());
         } finally {
             if (null != client) {
                 pool.getMinioClientPool().returnObject(client);

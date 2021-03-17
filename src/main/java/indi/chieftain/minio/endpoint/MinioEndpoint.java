@@ -1,20 +1,13 @@
-package org.chieftain.minio.http;
+package indi.chieftain.minio.endpoint;
 
+import indi.chieftain.minio.component.MinioTemplate;
 import io.minio.errors.ErrorResponseException;
 import io.minio.errors.InsufficientDataException;
 import io.minio.errors.InternalException;
-import io.minio.errors.InvalidArgumentException;
-import io.minio.errors.InvalidBucketNameException;
-import io.minio.errors.InvalidEndpointException;
-import io.minio.errors.InvalidExpiresRangeException;
-import io.minio.errors.InvalidPortException;
 import io.minio.errors.InvalidResponseException;
-import io.minio.errors.NoResponseException;
-import io.minio.errors.RegionConflictException;
 import io.minio.messages.Bucket;
-import org.chieftain.minio.service.MinioOptimizTemplate;
-import org.chieftain.minio.vo.MinioItem;
-import org.chieftain.minio.vo.MinioObject;
+import indi.chieftain.minio.vo.MinioItem;
+import indi.chieftain.minio.vo.MinioObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -28,7 +21,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 import java.security.InvalidKeyException;
@@ -44,12 +36,12 @@ public class MinioEndpoint {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MinioEndpoint.class);
 
-    public MinioEndpoint(MinioOptimizTemplate minioOptimizTemplate) {
+    public MinioEndpoint(MinioTemplate minioTemplate) {
         LOGGER.info("MinioEndpoint init");
-        this.minioOptimizTemplate = minioOptimizTemplate;
+        this.minioTemplate = minioTemplate;
     }
 
-    private final MinioOptimizTemplate minioOptimizTemplate;
+    private final MinioTemplate minioTemplate;
     private static final Integer ONE_DAY = 60 * 60 * 24;
 
     /**
@@ -58,29 +50,24 @@ public class MinioEndpoint {
      */
     @PostMapping("/bucket/{bucketName}")
     public Bucket createBucker(@PathVariable String bucketName) throws Exception {
-        minioOptimizTemplate.createBucket(bucketName);
-        return minioOptimizTemplate.getBucket(bucketName).get();
+        minioTemplate.createBucket(bucketName);
+        return minioTemplate.getBucket(bucketName).get();
     }
 
     /**
      * 获取所有bucket
      * @return
      * @throws IOException
-     * @throws XmlPullParserException
      * @throws NoSuchAlgorithmException
      * @throws InvalidKeyException
-     * @throws InvalidPortException
      * @throws ErrorResponseException
-     * @throws NoResponseException
-     * @throws InvalidBucketNameException
      * @throws InsufficientDataException
-     * @throws InvalidEndpointException
      * @throws InternalException
      * @throws InvalidResponseException
      */
     @GetMapping("/bucket")
     public List<Bucket> getBuckets() throws Exception {
-            return minioOptimizTemplate.getAllBuckets();
+            return minioTemplate.getAllBuckets();
     }
 
     /**
@@ -88,43 +75,33 @@ public class MinioEndpoint {
      * @param bucketName
      * @return
      * @throws IOException
-     * @throws XmlPullParserException
      * @throws NoSuchAlgorithmException
      * @throws InvalidKeyException
-     * @throws InvalidPortException
      * @throws ErrorResponseException
-     * @throws NoResponseException
-     * @throws InvalidBucketNameException
      * @throws InsufficientDataException
-     * @throws InvalidEndpointException
      * @throws InternalException
      * @throws InvalidResponseException
      */
     @GetMapping("/bucket/{bucketName}")
     public Bucket getBucket(@PathVariable String bucketName) throws Exception {
-        return minioOptimizTemplate.getBucket(bucketName).orElseThrow(() -> new IllegalArgumentException("Bucket Name not found!"));
+        return minioTemplate.getBucket(bucketName).orElseThrow(() -> new IllegalArgumentException("Bucket Name not found!"));
     }
 
     /**
      * 删除bucket
      * @param bucketName
      * @throws IOException
-     * @throws XmlPullParserException
      * @throws NoSuchAlgorithmException
      * @throws InvalidKeyException
-     * @throws InvalidPortException
      * @throws ErrorResponseException
-     * @throws NoResponseException
-     * @throws InvalidBucketNameException
      * @throws InsufficientDataException
-     * @throws InvalidEndpointException
      * @throws InternalException
      * @throws InvalidResponseException
      */
     @DeleteMapping("/bucket/{bucketName}")
     @ResponseStatus(HttpStatus.ACCEPTED)
     public void deleteBucket(@PathVariable String bucketName) throws Exception {
-            minioOptimizTemplate.removeBucket(bucketName);
+            minioTemplate.removeBucket(bucketName);
     }
 
     /**
@@ -134,8 +111,8 @@ public class MinioEndpoint {
     @PostMapping("/object/{bucketName}")
     public MinioObject putObject(@RequestBody MultipartFile object, @PathVariable String bucketName) throws Exception {
         String name = object.getOriginalFilename();
-        minioOptimizTemplate.putObject(bucketName, name, object.getInputStream(), object.getSize(), object.getContentType());
-        return new MinioObject(minioOptimizTemplate.getObjectInfo(bucketName, name));
+        minioTemplate.putObject(bucketName, name, object.getInputStream(), object.getSize(), object.getContentType());
+        return new MinioObject(minioTemplate.getObjectInfo(bucketName, name));
 
     }
 
@@ -148,22 +125,15 @@ public class MinioEndpoint {
      * @throws IOException
      * @throws InvalidKeyException
      * @throws NoSuchAlgorithmException
-     * @throws XmlPullParserException
-     * @throws InvalidPortException
      * @throws ErrorResponseException
      * @throws InternalException
-     * @throws NoResponseException
-     * @throws InvalidBucketNameException
      * @throws InsufficientDataException
-     * @throws InvalidEndpointException
-     * @throws RegionConflictException
-     * @throws InvalidArgumentException
      * @throws InvalidResponseException
      */
     @PostMapping("/object/{bucketName}/{objectName}")
     public MinioObject putObject(@RequestBody MultipartFile object, @PathVariable String bucketName, @PathVariable String objectName) throws Exception {
-        minioOptimizTemplate.putObject(bucketName, objectName, object.getInputStream(), object.getSize(), object.getContentType());
-        return new MinioObject(minioOptimizTemplate.getObjectInfo(bucketName, objectName));
+        minioTemplate.putObject(bucketName, objectName, object.getInputStream(), object.getSize(), object.getContentType());
+        return new MinioObject(minioTemplate.getObjectInfo(bucketName, objectName));
     }
 
 
@@ -172,12 +142,10 @@ public class MinioEndpoint {
      * @param bucketName
      * @param objectName
      * @return
-     * @throws InvalidPortException
-     * @throws InvalidEndpointException
      */
     @GetMapping("/object/{bucketName}/{objectName}")
     public  List<MinioItem>  filterObject(@PathVariable String bucketName, @PathVariable String objectName) throws Exception {
-        return minioOptimizTemplate.getAllObjectsByPrefix(bucketName, objectName, true);
+        return minioTemplate.getAllObjectsByPrefix(bucketName, objectName, true);
     }
 
     /**
@@ -187,26 +155,20 @@ public class MinioEndpoint {
      * @param expires
      * @return
      * @throws IOException
-     * @throws XmlPullParserException
      * @throws NoSuchAlgorithmException
      * @throws InvalidKeyException
-     * @throws InvalidPortException
      * @throws ErrorResponseException
-     * @throws NoResponseException
-     * @throws InvalidBucketNameException
      * @throws InsufficientDataException
-     * @throws InvalidEndpointException
      * @throws InternalException
-     * @throws InvalidExpiresRangeException
      * @throws InvalidResponseException
      */
     @GetMapping("/object/{bucketName}/{objectName}/{expires}")
     public Map<String, Object> getObject( @PathVariable String bucketName, @PathVariable String objectName, @PathVariable Integer expires) throws Exception {
-        Map<String,Object> responseBody = new HashMap<>();
+        Map<String,Object> responseBody = new HashMap<>(4);
         // Put Object info
         responseBody.put("bucket" , bucketName);
         responseBody.put("object" , objectName);
-        responseBody.put("url" , minioOptimizTemplate.getObjectURL(bucketName, objectName, expires));
+        responseBody.put("url" , minioTemplate.getObjectURL(bucketName, objectName, expires));
         responseBody.put("expires" ,  expires);
         return  responseBody;
     }
@@ -216,22 +178,16 @@ public class MinioEndpoint {
      * @param bucketName
      * @param objectName
      * @throws IOException
-     * @throws XmlPullParserException
      * @throws NoSuchAlgorithmException
      * @throws InvalidKeyException
-     * @throws InvalidPortException
      * @throws ErrorResponseException
-     * @throws NoResponseException
-     * @throws InvalidBucketNameException
      * @throws InsufficientDataException
-     * @throws InvalidEndpointException
      * @throws InternalException
-     * @throws InvalidArgumentException
      * @throws InvalidResponseException
      */
     @DeleteMapping("/object/{bucketName}/{objectName}/")
     @ResponseStatus(HttpStatus.ACCEPTED)
     public void deleteObject(@PathVariable String bucketName, @PathVariable String objectName) throws Exception {
-        minioOptimizTemplate.removeObject(bucketName, objectName);
+        minioTemplate.removeObject(bucketName, objectName);
     }
 }

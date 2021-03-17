@@ -1,4 +1,4 @@
-package org.chieftain.minio;
+package indi.chieftain.minio;
 
 import lombok.Data;
 import lombok.ToString;

@@ -1,4 +1,4 @@
-package org.chieftain.minio.vo;
+package indi.chieftain.minio.vo;
 
 import io.minio.messages.Item;
 import io.minio.messages.Owner;
@@ -30,7 +30,7 @@ public class MinioItem {
 
     public MinioItem(Item item) {
         this.objectName = item.objectName();
-        this.lastModified = item.lastModified();
+        this.lastModified = Date.from(item.lastModified().toInstant());
         this.etag = item.etag();
         this.size = item.size();
         this.storageClass = item.storageClass();

@@ -1,4 +1,4 @@
-package org.chieftain.minio.pool;
+package indi.chieftain.minio.pool;
 
 import io.minio.MinioClient;
 import org.apache.commons.pool2.BasePooledObjectFactory;
@@ -7,7 +7,6 @@ import org.apache.commons.pool2.impl.DefaultPooledObject;
 
 /**
  * @author chieftain
- * @date 2019-11-01 16:19
  */
 public class MinioClientPoolFactory extends BasePooledObjectFactory<MinioClient> {
 
@@ -20,8 +19,13 @@ public class MinioClientPoolFactory extends BasePooledObjectFactory<MinioClient>
     }
 
     @Override
-    public MinioClient create() throws Exception {
-        return new MinioClient(this.endpoint, this.accessKey, this.secretKey);
+    public MinioClient create() {
+        return MinioClient.builder().endpoint(this.endpoint).credentials(this.accessKey, this.secretKey).build();
+    }
+
+    @Override
+    public PooledObject<MinioClient> makeObject() throws Exception {
+        return super.makeObject();
     }
 
     @Override

@@ -1,4 +1,4 @@
-package org.chieftain.minio.exception;
+package indi.chieftain.minio.exception;
 
 import org.springframework.http.HttpStatus;
 
